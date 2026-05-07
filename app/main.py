@@ -7,7 +7,8 @@ from app.routers import (
     stock_in_router,
     stock_out_router,
     stats_router,
-    export_router
+    export_router,
+    sync_router
 )
 
 # Create database tables
