@@ -34,6 +34,7 @@ app.include_router(stock_in_router)
 app.include_router(stock_out_router)
 app.include_router(stats_router)
 app.include_router(export_router)
+app.include_router(sync_router)
 
 
 @app.get("/")
