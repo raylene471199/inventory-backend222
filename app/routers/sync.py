@@ -10,8 +10,6 @@ class DeviceRegister(BaseModel):
     device_id: str
     device_name: str = ""
 
-
-
 # 同步推送
 class SyncPush(BaseModel):
     device_id: str
@@ -23,49 +21,43 @@ class SyncPull(BaseModel):
     device_id: str
     last_sync_time: Optional[str] = None
 
-# 模拟云端数据存储（实际应该用数据库）
-cloud_data_store: Dict[str, Dict[str, Any]] = {}
+# 共享数据存储（所有设备共用）
+shared_data = {
+    "products": [],
+    "stockInList": [],
+    "saleList": []
+}
 
-# 注册设备
 @router.post("/device/register")
 def register_device(device: DeviceRegister):
     return {"success": True, "message": "设备注册成功"}
 
-# 推送数据到云端
 @router.post("/sync/push")
 def sync_push(data: SyncPush):
     try:
-        # 存储数据到云端
-        cloud_data_store[data.device_id] = {
-            "products": data.data.get("products", []),
-            "stockInList": data.data.get("stockInList", []),
-            "saleList": data.data.get("saleList", []),
-            "last_update": datetime.now().isoformat()
-        }
+        # 合并数据到共享存储
+        if "products" in data.data and data.data["products"]:
+            shared_data["products"] = data.data["products"]
+        if "stockInList" in data.data and data.data["stockInList"]:
+            shared_data["stockInList"] = data.data["stockInList"]
+        if "saleList" in data.data and data.data["saleList"]:
+            shared_data["saleList"] = data.data["saleList"]
+        
         return {"success": True, "message": "数据上传成功"}
     except Exception as e:
         return {"success": False, "message": str(e)}
 
-# 从云端拉取数据
 @router.post("/sync/pull")
 def sync_pull(data: SyncPull):
     try:
-        device_data = cloud_data_store.get(data.device_id)
-        if device_data:
-            return {
-                "success": True,
-                "pull_data": {
-                    "products": device_data.get("products", []),
-                    "stockInList": device_data.get("stockInList", []),
-                    "saleList": device_data.get("saleList", [])
-                },
-                "last_update": device_data.get("last_update")
-            }
-        else:
-            return {
-                "success": True,
-                "pull_data": None,
-                "message": "暂无数据"
-            }
+        return {
+            "success": True,
+            "pull_data": {
+                "products": shared_data.get("products", []),
+                "stockInList": shared_data.get("stockInList", []),
+                "saleList": shared_data.get("saleList", [])
+            },
+            "last_update": datetime.now().isoformat()
+        }
     except Exception as e:
         return {"success": False, "message": str(e)}
