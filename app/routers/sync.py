@@ -10,6 +10,8 @@ class DeviceRegister(BaseModel):
     device_id: str
     device_name: str = ""
 
+
+
 # 同步推送
 class SyncPush(BaseModel):
     device_id: str
